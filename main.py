@@ -8,6 +8,7 @@ c = db.cursor()
 counter = 5
 count=0
 flag= [0,0]
+selectorDB=''
 #Обрабокта запуска бота
 @bot.message_handler(commands=['start'])
 def start(message):
@@ -15,7 +16,7 @@ def start(message):
     markup = types.ReplyKeyboardMarkup()
     btn1 = types.KeyboardButton("Часто задаваемые вопросы про поступление")
 
-    btn2 = types.KeyboardButton("Часто задаваемые вопросы про обучение")
+    btn2 = types.KeyboardButton("Часто задаваемые вопросы про обучение и кампус")
     markup.row(btn1,btn2)
     btn3 = types.KeyboardButton("Информация о напрвлениях обучение")
     markup.row(btn3)
@@ -25,6 +26,7 @@ def start(message):
 
 @bot.callback_query_handler(func=lambda call: True)
 def handle_button_click(call):
+    global selectorDB
     global count
     global counter
     # Проверка, была ли нажата кнопка
@@ -37,7 +39,7 @@ def handle_button_click(call):
         bot.delete_message(chat_id, message_id)
         db = sqlite3.connect('rdInfoForPK.db')
         c = db.cursor()
-        c.execute('SELECT rowid, name_ID FROM info')
+        c.execute(f'SELECT rowid, name_ID FROM {selectorDB}')
         list1 = c.fetchall()
         counter = len(list1) - 5
         # if counter % 5 == 0:
@@ -103,16 +105,19 @@ def handle_button_click(call):
 
         else:
 
-            c.execute(f'SELECT text_info FROM info WHERE rowid="{button_data}"')
+            c.execute(f'SELECT text_info,flag,URL_img FROM {selectorDB} WHERE rowid="{button_data}"')
             list1 = c.fetchall()
-
-            bot.send_message(call.message.chat.id, f"{list1[0][0]}")
+            if list1[0][1] == "1":
+                bot.send_photo(call.message.chat.id, open(list1[0][2], 'rb'), caption=f'{list1[0][0]}')
+            else:
+                bot.send_message(call.message.chat.id, f"{list1[0][0]}")
 
         c.close()
 
 #Обработка команд клавиатуры
 @bot.message_handler()
 def main(message):
+    global selectorDB
     global count
     global flag
     #Обработка Кнопки с вызываом сайта
@@ -126,12 +131,13 @@ def main(message):
 
 
     # Обработка Кнопки с вызывом вопросов
-    elif message.text == 'Часто задаваемые вопросы про обучение':
+    elif message.text == 'Часто задаваемые вопросы про обучение и кампус':
+        selectorDB = 'infoCampus'
         flag= [0,0]
         count = 0
         db = sqlite3.connect('rdInfoForPK.db')
         c = db.cursor()
-        c.execute('SELECT rowid, name_ID FROM info')
+        c.execute('SELECT rowid, name_ID FROM infoCampus')
         list1 = c.fetchall()
 
         # Создание пустого списка кнопок
@@ -162,24 +168,40 @@ def main(message):
 
     # Обработка Кнопки с вызывом вопросов
     elif message.text == 'Часто задаваемые вопросы про поступление':
-
+        selectorDB = 'info'
+        flag = [0, 0]
+        count = 0
+        db = sqlite3.connect('rdInfoForPK.db')
+        c = db.cursor()
+        c.execute('SELECT rowid, name_ID FROM info')
+        list1 = c.fetchall()
 
         # Создание пустого списка кнопок
         keyboard = types.InlineKeyboardMarkup()
 
         # Количество кнопок, которое вы хотите создать
-        num_buttons = 5
+        if len(list1) > 5:
+            num_buttons = 5
+            flag = [1, 1]
+        else:
+            num_buttons = len(list1)
+            flag = [0, 0]
 
         # Генерация кнопок с использованием цикла или генератора списков
         for i in range(num_buttons):
             # Создание кнопки с уникальным текстом и колбэк-данными
-            button = types.InlineKeyboardButton(text=f'Button {i + 1}', callback_data=f'button_{i + 1}')
+            button = types.InlineKeyboardButton(text=f'{list1[i][1]}', callback_data=f'{list1[i][0]}')
 
             # Добавление кнопки в список
             keyboard.add(button)
-
+        if flag[1]:
+            print(1)
+            button = types.InlineKeyboardButton(text='Далее', callback_data='enter')
+            keyboard.add(button)
         # Отправка клавиатуры с кнопками в чат
         bot.send_message(message.chat.id, 'Выберите кнопку:', reply_markup=keyboard)
+        c.close()
+
     else:
         bot.send_message(message.chat.id, "Неверная команда",)
 
