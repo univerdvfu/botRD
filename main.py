@@ -2,7 +2,7 @@ import telebot
 from telebot import types
 import sqlite3
 
-bot = telebot.TeleBot("")
+bot = telebot.TeleBot("6137651503:AAFofB-QV9X2WJkPVCSiGB5vOIxCc-wo3Mg")
 db = sqlite3.connect('rdInfo.db')
 c = db.cursor()
 counter = 5
@@ -41,7 +41,7 @@ def handle_button_click(call):
         c = db.cursor()
         c.execute(f'SELECT rowid, name_ID FROM {selectorDB}')
         list1 = c.fetchall()
-        counter = len(list1) - 5
+
         # if counter % 5 == 0:
         #     counter-=5
         if button_data == 'enter':
@@ -55,7 +55,7 @@ def handle_button_click(call):
             else:
                 num_buttons = counter
             # Генерация кнопок с использованием цикла или генератора списков
-
+            print(num_buttons,count,counter)
             for i in range(num_buttons):
                 # Создание кнопки с уникальным текстом и колбэк-данными
                 button = types.InlineKeyboardButton(text=f'{list1[i + (5 * count)][1]}',
@@ -75,7 +75,7 @@ def handle_button_click(call):
             # Выполнение действий в зависимости от нажатой кнопки
         elif button_data == 'back':
             count -= 1
-
+            counter += 5
             # Создание пустого списка кнопок
             keyboard = types.InlineKeyboardMarkup()
             # Количество кнопок, которое вы хотите создать
@@ -85,7 +85,7 @@ def handle_button_click(call):
             else:
                 num_buttons = counter
             # Генерация кнопок с использованием цикла или генератора списков
-
+            print(counter, num_buttons, count)
             for i in range(num_buttons):
                 # Создание кнопки с уникальным текстом и колбэк-данными
                 button = types.InlineKeyboardButton(text=f'{list1[i + (5 * count)][1]}',
@@ -120,13 +120,43 @@ def main(message):
     global selectorDB
     global count
     global flag
+    global counter
+
     #Обработка Кнопки с вызываом сайта
     if  message.text == 'Информация о напрвлениях обучение':
-        markupOnChat = types.InlineKeyboardMarkup()
-        btn4 = types.InlineKeyboardButton('russky.digital', url='https://russky.digital/')
-        markupOnChat.row(btn4)
-        # bot.send_message(message.chat.id, "Информация о напрвлениях обучение", reply_markup=markupOnChat)
-        bot.send_photo(message.chat.id, open('img/avatar_orange.png', 'rb'), caption='Тут пожробное описание', reply_markup=markupOnChat)
+        selectorDB = 'infoDirection'
+        flag = [0, 0]
+        count = 0
+        db = sqlite3.connect('rdInfoForPK.db')
+        c = db.cursor()
+        c.execute('SELECT rowid, name_ID FROM infoDirection')
+        list1 = c.fetchall()
+        counter = len(list1) - 5
+        # Создание пустого списка кнопок
+        keyboard = types.InlineKeyboardMarkup()
+
+        # Количество кнопок, которое вы хотите создать
+        if len(list1) > 5:
+            num_buttons = 5
+            flag = [1, 1]
+        else:
+            num_buttons = len(list1)
+            flag = [0, 0]
+
+        # Генерация кнопок с использованием цикла или генератора списков
+        for i in range(num_buttons):
+            # Создание кнопки с уникальным текстом и колбэк-данными
+            button = types.InlineKeyboardButton(text=f'{list1[i][1]}', callback_data=f'{list1[i][0]}')
+
+            # Добавление кнопки в список
+            keyboard.add(button)
+        if flag[1]:
+            print(1)
+            button = types.InlineKeyboardButton(text='Далее', callback_data='enter')
+            keyboard.add(button)
+        # Отправка клавиатуры с кнопками в чат
+        bot.send_message(message.chat.id, 'Выберите кнопку:', reply_markup=keyboard)
+        c.close()
 
 
 
@@ -139,7 +169,7 @@ def main(message):
         c = db.cursor()
         c.execute('SELECT rowid, name_ID FROM infoCampus')
         list1 = c.fetchall()
-
+        counter = len(list1) - 5
         # Создание пустого списка кнопок
         keyboard = types.InlineKeyboardMarkup()
 
@@ -175,7 +205,7 @@ def main(message):
         c = db.cursor()
         c.execute('SELECT rowid, name_ID FROM info')
         list1 = c.fetchall()
-
+        counter = len(list1) - 5
         # Создание пустого списка кнопок
         keyboard = types.InlineKeyboardMarkup()
 
