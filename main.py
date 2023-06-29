@@ -2,7 +2,7 @@ import telebot
 from telebot import types
 import sqlite3
 
-bot = telebot.TeleBot("6137651503:AAFofB-QV9X2WJkPVCSiGB5vOIxCc-wo3Mg")
+bot = telebot.TeleBot("")
 db = sqlite3.connect('rdInfo.db')
 c = db.cursor()
 counter = 5
