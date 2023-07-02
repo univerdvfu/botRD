@@ -1,8 +1,30 @@
 import sqlite3
 
-db = sqlite3.connect('rdInfoForPK.db')
 
-c = db.cursor()
+# Подключение к базе данных SQLite
+conn = sqlite3.connect('database.db')
+cursor = conn.cursor()
+
+# Создание таблицы authors
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS authors (
+        id INTEGER PRIMARY KEY,
+        name TEXT
+    )
+''')
+
+# Создание таблицы books с внешним ключом, который ссылается на таблицу authors
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS books (
+        id INTEGER PRIMARY KEY,
+        title TEXT,
+        author_id INTEGER,
+        FOREIGN KEY (author_id) REFERENCES authors(id)
+    )
+''')
+# db = sqlite3.connect('rdInfoForPK.db')
+#
+# c = db.cursor()
 
 # c.execute("""
 # CREATE TABLE info(
@@ -32,13 +54,13 @@ c = db.cursor()
 # )
 # """
 # )
-
-c.execute("INSERT INTO infoDirection VALUES('Прикладная информатика в компьютерном дизайне','Научишься делать красивое: игры, оболочку мобильных и веб-приложений, а ещё анимации и 3D-модели для роликов и даже фильмов! И всё это благодаря полученным знаниям в области:\n -моделирования систем;\n-объектно-ориентированного анализа и проектирования;\n- математических основ компьютерной графики;\n - мультимедийных технологий;\n- 3D-прототипирования;\n- и других инструментов\n P.S.: фотошоп принимать в микродозах ','0','')")
-# c.execute('INSERT INTO infoCampus VALUES("Дорогое такси?","Не дороже личного верблюда","0","")')
-# c.execute('UPDATE infoCampus SET URL_img = "img/IMG_7755-3.jpg" WHERE name_ID = "Есть ли кто-то кроме лисов на кампусе"')
-c.execute(' SELECT * FROM infoCampus ')
-print(5//5)
-print( len(c.fetchall()))
-
-db.commit()
-db.close()
+#
+# c.execute("INSERT INTO infoDirection VALUES('Прикладная информатика в компьютерном дизайне','Научишься делать красивое: игры, оболочку мобильных и веб-приложений, а ещё анимации и 3D-модели для роликов и даже фильмов! И всё это благодаря полученным знаниям в области:\n -моделирования систем;\n-объектно-ориентированного анализа и проектирования;\n- математических основ компьютерной графики;\n - мультимедийных технологий;\n- 3D-прототипирования;\n- и других инструментов\n P.S.: фотошоп принимать в микродозах ','0','')")
+# # c.execute('INSERT INTO infoCampus VALUES("Дорогое такси?","Не дороже личного верблюда","0","")')
+# # c.execute('UPDATE infoCampus SET URL_img = "img/IMG_7755-3.jpg" WHERE name_ID = "Есть ли кто-то кроме лисов на кампусе"')
+# c.execute(' SELECT * FROM infoCampus ')
+# print(5//5)
+# print( len(c.fetchall()))
+#
+# db.commit()
+# db.close()

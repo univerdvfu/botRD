@@ -2,34 +2,80 @@ import telebot
 from telebot import types
 import sqlite3
 
-bot = telebot.TeleBot("")
-db = sqlite3.connect('rdInfo.db')
-c = db.cursor()
-counter = 5
-count=0
-flag= [0,0]
-selectorDB=''
-#Обрабокта запуска бота
-@bot.message_handler(commands=['start'])
-def start(message):
-    #Создание клавиауры запросов
-    keyboard = types.ReplyKeyboardMarkup()
-    button = types.KeyboardButton(text="Информация о напрвлениях обучение")
-    keyboard.add(button)
-    button = types.KeyboardButton(text="Часто задаваемые вопросы про поступление")
-    keyboard.add(button)
-    button = types.KeyboardButton(text="Часто задаваемые вопросы про обучение и кампус")
-    keyboard.add(button)
+list1= [ ]
+bot = telebot.TeleBot("6137651503:AAFofB-QV9X2WJkPVCSiGB5vOIxCc-wo3Mg")
 
-    bot.send_message(message.chat.id,"Привет! Я твой помошник и готов ответить на часто задаваемые вопросы. Выбери что тебя интересует в меню",reply_markup=keyboard)
+
+def check_element_exists(table_name, column_name, value):
+    global list1
+    # Устанавливаем соединение с базой данных
+    conn = sqlite3.connect('rdInfoForPK.db')
+    cursor = conn.cursor()
+
+    # Выполняем запрос SELECT с условием
+    query = f"SELECT COUNT(*) FROM {table_name} WHERE {column_name} = ?"
+    cursor.execute(query, (value,))
+
+
+    # Извлекаем результат
+    result = cursor.fetchone()[0]
+    cursor.execute(f"SELECT text_info FROM {table_name} WHERE {column_name}")
+    list1 = cursor.fetchone()
+    # Закрываем соединение с базой данных
+    cursor.close()
+    conn.close()
+
+    # Возвращаем True, если элемент существует, и False в противном случае
+    return result
+
+def drowBatons(selector,counter):
+    conn = sqlite3.connect('rdInfoForPK.db')
+    cursor = conn.cursor()
+    cursor.execute(f'SELECT rowid, name_ID FROM {selector}')
+    for i in range(num_buttons):
+        # Создание кнопки с уникальным текстом и колбэк-данными
+        button = types.InlineKeyboardButton(
+            text=f'{list1[i][1]}',
+            callback_data=f'{list1[i][0]}')
+
+        # Добавление кнопки в список
+        keyboard.add(button)
+    if flag[1]:
+        print(1)
+        button = types.InlineKeyboardButton(
+            text='Далее', callback_data='enter')
+        keyboard.add(button)
+    # Отправка клавиатуры с кнопками в чат
+    bot.send_message(message.chat.id,
+                     'Выберите кнопку:',
+                     reply_markup=keyboard)
+    c.close()
+
+@bot.message_handler(commands=['start'])
+
+def start(message):
+    global list1
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+
+    db = sqlite3.connect('rdInfoForPK.db')
+    c = db.cursor()
+    c.execute('SELECT rowid, name_ID, text_info FROM butons')
+    list1 =c.fetchall()
+    # print(len(list1))
+    for i in range(0,len(list1),2):
+
+        if  i < len(list1)-1:
+            # print(i)
+            markup.row(types.KeyboardButton(list1[i][1]), types.KeyboardButton(list1[i+1][1]))
+        else:
+            markup.row(types.KeyboardButton(list1[i][1]))
+
+    bot.send_message(message.chat.id, 'Выберите опцию:',reply_markup=markup)
 
 
 
 @bot.callback_query_handler(func=lambda call: True)
 def handle_button_click(call):
-    global selectorDB
-    global count
-    global counter
     # Проверка, была ли нажата кнопка
     if call.data:
         # Кнопка была нажата
@@ -38,178 +84,26 @@ def handle_button_click(call):
         chat_id = call.message.chat.id
 
         bot.delete_message(chat_id, message_id)
-        db = sqlite3.connect('rdInfoForPK.db')
-        c = db.cursor()
-        c.execute(f'SELECT rowid, name_ID FROM {selectorDB}')
-        list1 = c.fetchall()
-        counter = len(list1) - 5
-        # if counter % 5 == 0:
-        #     counter-=5
         if button_data == 'enter':
-            count += 1
-            # Создание пустого списка кнопок
-            keyboard = types.InlineKeyboardMarkup()
-            # Количество кнопок, которое вы хотите создать
-            if (counter // 5 != 0):
-                num_buttons = 5
-                counter -= 5
-            else:
-                num_buttons = counter
-            # Генерация кнопок с использованием цикла или генератора списков
-
-            for i in range(num_buttons):
-                # Создание кнопки с уникальным текстом и колбэк-данными
-                button = types.InlineKeyboardButton(text=f'{list1[i + (5 * count)][1]}',
-                                                    callback_data=f'{list1[i + (5 * count)][0]}')
-                # Добавление кнопки в список
-                keyboard.add(button)
-            if count < ((len(list1) - 1) // 5):
-                button = types.InlineKeyboardButton(text=f'Далее', callback_data=f'enter')
-                keyboard.add(button)
-
-            if count > 0:
-                button = types.InlineKeyboardButton(text=f'Назад', callback_data=f'back')
-                keyboard.add(button)
-
-            # Отправка клавиатуры с кнопками в чат
-            bot.send_message(call.message.chat.id, 'Выберите кнопку:', reply_markup=keyboard)
-            # Выполнение действий в зависимости от нажатой кнопки
+            pass
         elif button_data == 'back':
-            count -= 1
-
-            # Создание пустого списка кнопок
-            keyboard = types.InlineKeyboardMarkup()
-            # Количество кнопок, которое вы хотите создать
-            if counter // 5 != 0:
-                num_buttons = 5
-                counter -= 5
-            else:
-                num_buttons = counter
-            # Генерация кнопок с использованием цикла или генератора списков
-
-            for i in range(num_buttons):
-                # Создание кнопки с уникальным текстом и колбэк-данными
-                button = types.InlineKeyboardButton(text=f'{list1[i + (5 * count)][1]}',
-                                                    callback_data=f'{list1[i + (5 * count)][0]}')
-                # Добавление кнопки в список
-                keyboard.add(button)
-            if count < (len(list1) // 5):
-                button = types.InlineKeyboardButton(text=f'Далее', callback_data=f'enter')
-                keyboard.add(button)
-            if count > 0:
-                button = types.InlineKeyboardButton(text=f'Назад', callback_data=f'back')
-                keyboard.add(button)
-
-            # Отправка клавиатуры с кнопками в чат
-            bot.send_message(call.message.chat.id, 'Выберите кнопку:', reply_markup=keyboard)
-
-
+            pass
         else:
-
-            c.execute(f'SELECT text_info,flag,URL_img FROM {selectorDB} WHERE rowid="{button_data}"')
-            list1 = c.fetchall()
-            if list1[0][1] == "1":
-                bot.send_photo(call.message.chat.id, open(list1[0][2], 'rb'), caption=f'{list1[0][0]}')
-            else:
-                bot.send_message(call.message.chat.id, f"{list1[0][0]}")
-
+           pass
         c.close()
 
-#Обработка команд клавиатуры
 @bot.message_handler()
 def main(message):
-    global selectorDB
-    global count
-    global flag
-    #Обработка Кнопки с вызываом сайта
-    if  message.text == 'Информация о напрвлениях обучение':
-        markupOnChat = types.InlineKeyboardMarkup()
-        btn4 = types.InlineKeyboardButton('russky.digital', url='https://russky.digital/')
-        markupOnChat.row(btn4)
-        # bot.send_message(message.chat.id, "Информация о напрвлениях обучение", reply_markup=markupOnChat)
-        bot.send_photo(message.chat.id, open('img/avatar_orange.png', 'rb'), caption='Тут пожробное описание', reply_markup=markupOnChat)
+    global list1
 
+    if check_element_exists('butons', 'name_ID',message.text):
 
+        drowBatons(list1,0)
 
-    # Обработка Кнопки с вызывом вопросов
-    elif message.text == 'Часто задаваемые вопросы про обучение и кампус':
-        selectorDB = 'infoCampus'
-        flag= [0,0]
-        count = 0
-        db = sqlite3.connect('rdInfoForPK.db')
-        c = db.cursor()
-        c.execute('SELECT rowid, name_ID FROM infoCampus')
-        list1 = c.fetchall()
-
-        # Создание пустого списка кнопок
-        keyboard = types.InlineKeyboardMarkup()
-
-        # Количество кнопок, которое вы хотите создать
-        if  len(list1)>5:
-            num_buttons = 5
-            flag = [1,1]
-        else:
-            num_buttons = len(list1)
-            flag = [0,0]
-
-        # Генерация кнопок с использованием цикла или генератора списков
-        for i in range(num_buttons):
-            # Создание кнопки с уникальным текстом и колбэк-данными
-            button = types.InlineKeyboardButton(text=f'{list1[i][1]}', callback_data=f'{list1[i][0]}')
-
-            # Добавление кнопки в список
-            keyboard.add(button)
-        if flag[1]:
-            print(1)
-            button = types.InlineKeyboardButton(text='Далее', callback_data='enter')
-            keyboard.add(button)
-        # Отправка клавиатуры с кнопками в чат
-        bot.send_message(message.chat.id, 'Выберите кнопку:', reply_markup=keyboard)
-        c.close()
-
-    # Обработка Кнопки с вызывом вопросов
-    elif message.text == 'Часто задаваемые вопросы про поступление':
-        selectorDB = 'info'
-        flag = [0, 0]
-        count = 0
-        db = sqlite3.connect('rdInfoForPK.db')
-        c = db.cursor()
-        c.execute('SELECT rowid, name_ID FROM info')
-        list1 = c.fetchall()
-
-        # Создание пустого списка кнопок
-        keyboard = types.InlineKeyboardMarkup()
-
-        # Количество кнопок, которое вы хотите создать
-        if len(list1) > 5:
-            num_buttons = 5
-            flag = [1, 1]
-        else:
-            num_buttons = len(list1)
-            flag = [0, 0]
-
-        # Генерация кнопок с использованием цикла или генератора списков
-        for i in range(num_buttons):
-            # Создание кнопки с уникальным текстом и колбэк-данными
-            button = types.InlineKeyboardButton(text=f'{list1[i][1]}', callback_data=f'{list1[i][0]}')
-
-            # Добавление кнопки в список
-            keyboard.add(button)
-        if flag[1]:
-            print(1)
-            button = types.InlineKeyboardButton(text='Далее', callback_data='enter')
-            keyboard.add(button)
-        # Отправка клавиатуры с кнопками в чат
-        bot.send_message(message.chat.id, 'Выберите кнопку:', reply_markup=keyboard)
-        c.close()
 
     else:
-        bot.send_message(message.chat.id, "Неверная команда",)
+        bot.send_message(message.chat.id, "Неверная команда")
 
-
-# photo_path = 'IMG_7755-3.jpg'
-#
-# bot.send_photo(message.chat.id, open(photo_path, 'rb'), caption='Привет! Я отправляю картинку и сообщение.')
 
 
 
