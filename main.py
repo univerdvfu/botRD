@@ -8,12 +8,28 @@ nameBD="rdInfoForPK.db"
 count=0
 flag= [0,0]
 
-def dbSelect(couter):
+def dbSelect(userID):
     db = sqlite3.connect(nameBD)
     cursor = db.cursor()
-    cursor.execute(f'SELECT bdSelector FROM users WHERE userID="{couter}"')
+    cursor.execute(f'SELECT bdSelector FROM users WHERE userID="{userID}"')
+    dataB = cursor.fetchall()
     cursor.close()
-    return cursor.fetchall()
+    return dataB
+def setCounter(item,userID):
+    db = sqlite3.connect(nameBD)
+    cursor = db.cursor()
+    cursor.execute("UPDATE users SET countbatton = ? WHERE userID = ?", (item, userID))
+    db.commit()
+    cursor.close()
+
+def getCounter(userID):
+    db = sqlite3.connect(nameBD)
+    cursor = db.cursor()
+    cursor.execute(f'SELECT countbatton FROM users WHERE userID="{userID}"')
+    dataB = cursor.fetchall()
+    cursor.close()
+    return dataB[0][0]
+
 
 
 def itemCheck(item_to_check,userID):
@@ -62,26 +78,46 @@ def handle_button_click(call):
 
     db = sqlite3.connect(nameBD)
     cursor = db.cursor()
-
+    counter = dbSelect(call.from_user.id)
 
     if call.data == "enter":
         cursor.execute(f'SELECT questions, rowid FROM {counter[0][0]} ')
         buttons = cursor.fetchall()
-
+        count = len(buttons) - getCounter(call.from_user.id)
         keyboard = types.InlineKeyboardMarkup(row_width=1)
-        for button in buttons[5:5]:
+        print(buttons[3:1])
+        for button in buttons[count:count+5]:
             key = types.InlineKeyboardButton(text=f'{button[0]}', callback_data=f'{button[1]}')
             keyboard.add(key)
-        if len(buttons) > 5:
+        if getCounter(call.from_user.id) > 5:
+            setCounter(getCounter(call.from_user.id) - 5, call.from_user.id)
             key = types.InlineKeyboardButton(text=f'Далее>>', callback_data='enter')
             keyboard.add(key)
+        keyboard.add(types.InlineKeyboardButton(text=f'<<Назад', callback_data=f'back'))
         bot.send_message(call.message.chat.id, text='Выберите кнопку:', reply_markup=keyboard)
 
+
     elif call.data == "back":
-        pass
+        cursor.execute(f'SELECT questions, rowid FROM {counter[0][0]} ')
+        buttons = cursor.fetchall()
+        # setCounter(getCounter(call.from_user.id) + 5, call.from_user.id)
+        count = len(buttons) - getCounter(call.from_user.id)
+        keyboard = types.InlineKeyboardMarkup(row_width=1)
+
+
+        for button in buttons[count:count+5]:
+            key = types.InlineKeyboardButton(text=f'{button[0]}', callback_data=f'{button[1]}')
+            keyboard.add(key)
+        if  getCounter(call.from_user.id) < len(buttons) - 5:
+            setCounter(getCounter(call.from_user.id) + 5, call.from_user.id)
+            key = types.InlineKeyboardButton(text=f'<<Назад', callback_data='back')
+            keyboard.add(key)
+        # else:
+        #     setCounter(getCounter(call.from_user.id) - 5, call.from_user.id)
+        keyboard.add(types.InlineKeyboardButton(text=f'Далее>>', callback_data=f'enter'))
+        bot.send_message(call.message.chat.id, text='Выберите кнопку:', reply_markup=keyboard)
     else:
-        cursor.execute(f'SELECT bdSelector FROM users WHERE userID="{call.from_user.id}"')
-        counter = cursor.fetchall()
+
 
         cursor.execute(f'SELECT * FROM {counter[0][0]} WHERE rowid="{call.data}"')
         list1 = cursor.fetchall()
@@ -102,19 +138,21 @@ def main(message):
 
         db = sqlite3.connect(nameBD)
         cursor = db.cursor()
-        cursor.execute(f'SELECT bdSelector FROM users WHERE userID="{message.from_user.id}"')
-        counter = cursor.fetchall()
-        print(counter)
+        counter = dbSelect(message.from_user.id)
+
+
         cursor.execute(f'SELECT questions, rowid FROM {counter[0][0]} ')
         buttons = cursor.fetchall()
 
         keyboard = types.InlineKeyboardMarkup(row_width=1)
+
         for button in buttons[:5]:
             key = types.InlineKeyboardButton(text = f'{button[0]}', callback_data=f'{button[1]}')
             keyboard.add(key)
         if len(buttons) > 5:
             key = types.InlineKeyboardButton(text=f'Далее>>', callback_data='enter')
             keyboard.add(key)
+            setCounter(len(buttons) - 5, message.from_user.id)
         bot.send_message(message.chat.id, text='Выберите кнопку:', reply_markup=keyboard)
 
 
