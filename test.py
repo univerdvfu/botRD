@@ -13,14 +13,15 @@ selectorDB=''
 @bot.message_handler(commands=['start'])
 def start(message):
     #Создание клавиауры запросов
-    markup = types.ReplyKeyboardMarkup()
-    btn1 = types.KeyboardButton("Часто задаваемые вопросы про поступление")
+    keyboard = types.ReplyKeyboardMarkup()
+    button = types.KeyboardButton(text="Информация о напрвлениях обучение")
+    keyboard.add(button)
+    button = types.KeyboardButton(text="Часто задаваемые вопросы про поступление")
+    keyboard.add(button)
+    button = types.KeyboardButton(text="Часто задаваемые вопросы про обучение и кампус")
+    keyboard.add(button)
 
-    btn2 = types.KeyboardButton("Часто задаваемые вопросы про обучение и кампус")
-    markup.row(btn1,btn2)
-    btn3 = types.KeyboardButton("Информация о напрвлениях обучение")
-    markup.row(btn3)
-    bot.send_message(message.chat.id,"Привет! Я твой помошник и готов ответить на часто задаваемые вопросы. Выбери что тебя интересует в меню",reply_markup=markup)
+    bot.send_message(message.chat.id,"Привет! Я твой помошник и готов ответить на часто задаваемые вопросы. Выбери что тебя интересует в меню",reply_markup=keyboard)
 
 
 
