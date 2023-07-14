@@ -120,11 +120,11 @@ def handle_button_click(call):
     else:
         cursor.execute(f'SELECT * FROM {counter[0][0]} WHERE rowid="{call.data}"')
         list1 = cursor.fetchall()
-        print(list1[0][2])
+
         if list1[0][2] == b'1':
             bot.delete_message(call.message.chat.id,call.message.message_id)
             bot.send_photo(call.message.chat.id, open(list1[0][3], 'rb'), caption=f'{list1[0][1]}')
-            print(1)
+
         else:
             bot.send_message(call.message.chat.id, f"{list1[0][1]}")
 
@@ -135,7 +135,19 @@ def handle_button_click(call):
 @bot.message_handler()
 def main(message):
 
-    if itemCheck(message.text,message.from_user.id):
+    if message.text == "Контакты":
+        db = sqlite3.connect(nameBD)
+        cursor = db.cursor()
+        counter = dbSelect(message.from_user.id)
+        cursor.execute(f'SELECT * FROM contacts ')
+        buttons = cursor.fetchall()
+        keyboard = types.InlineKeyboardMarkup()
+        for button in buttons:
+
+            key = types.InlineKeyboardButton(text = f'{button[0]}', url= f"{button[1]}")
+            keyboard.add(key)
+        bot.send_message(message.chat.id, text='Выберите кнопку:', reply_markup=keyboard)
+    elif itemCheck(message.text,message.from_user.id):
         db = sqlite3.connect(nameBD)
         cursor = db.cursor()
         counter = dbSelect(message.from_user.id)
